@@ -1,0 +1,22 @@
+{
+  "name": "dmb-rookies",
+  "version": "1.0.0",
+  "description": "Playwright program to check if a baseball player has rookie eligiblity",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robbsherwin/dmb-rookies.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robbsherwin/dmb-rookies/issues"
+  },
+  "homepage": "https://github.com/robbsherwin/dmb-rookies#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.1"
+  }
+}
