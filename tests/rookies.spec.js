@@ -1,12 +1,20 @@
 import { test, expect } from '@playwright/test';
 import { RookiePage } from './pages/rookiePage';
 
+// Todo - right now we are assuming that the 2024 season happened.
+// Can use the currentYear const to make that dynamic. 
+
 test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
 
     const rookiePage = new RookiePage;
 
-    //const playerArray = ["Nolan Jones", "Shane Baz", "Paul Skenes", "Kameron Misner"]
-    const playerArray = ["Jose Abreu", "Nolan Jones", "Shane Baz"];
+    // Diego Castillo - two show up, both played in 2024. 
+    // Two Logan Allens - how to determine? 
+
+        const playerArray = ["Cole Winn", "Keaton Winn", "Jake Woodford", "Simeon Woods Richardson", "Justin Wrobleski", "Yoshinobu Yamamoto", 
+        "Danny Young", "Rob Zastryzny", "Ryan Zeferjahn", "Tyler Zuber", "Yosver Zulueta", "Guillo Zuniga"
+      ];
+
     const veterans = [""];
     const rookies = [""];
     const couldNotDetermine = [""];
@@ -42,6 +50,7 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
 
         await page.waitForTimeout(500);
         let nameExactlyVisible = await page.getByText(regex).isVisible();
+        await page.waitForTimeout(500);
 
         // If the name is exactly there, then click on it. 
         if (nameExactlyVisible) {
