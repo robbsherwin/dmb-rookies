@@ -24,15 +24,15 @@ export class RookiePage {
         return stringToNormalize.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
-    async removeBeforeAndIncluding2024(str) {
-        return str.replace(/^.*2024/, "").trim();
-      }
+    async removeBeforeAndIncluding2025(str) {
+        return str.replace(/^.*2025/, "").trim();
+    }
 
 
 
-      async removeFromAllMatches(str) {
+    async removeFromAllMatches(str) {
         return str.replace(/All matches.*/, "").trim();
-      }
+    }
 
 
 
