@@ -12,16 +12,20 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
     // Read player names from rookies.txt file (one per line)
     const playerArray = await getRookiePlayers();
 
+    // Needs to know which
+    const hittersOrPitchers = "hitters";
 
     const veterans = [""];
     const rookies = [""];
     const couldNotDetermine = [""];
+    const suspicious = [""];
     let cantFindPlayer = false;
     const currentYear = String(new Date().getFullYear());
 
 
     for (var x = 0; x < playerArray.length; x++) {
         cantFindPlayer = false;
+        let bRefPossibleMisMatch = false;
         await page.goto('https://www.baseball-reference.com/');
 
         await rookiePage.clickOnPopup(page);
@@ -88,17 +92,18 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
         }
         else {
 
-            await page.waitForTimeout(1000);
+            // Wait 3 seconds to see if the ad blocker pop-up appears. 
+            await page.waitForTimeout(3000);
 
             // Check for ad blocker detection and click to dismiss if present
             const adBlockerDetected = await page.getByText('Looks like your ad blocker is on.').isVisible();
             if (adBlockerDetected) {
                 console.log("Ad blocker detected and clicked to dismiss");
-                await page.locator('xpath=/html/body/div[7]/div/div/span').click();
+                await page.getByText('Continue without supporting us').click();
                 await page.waitForTimeout(500);
             }
             else {
-                console.log("No ad blocker pop-updetected");
+                console.log("No ad blocker pop-up detected");
             }
 
             const bioUniformDraft = await page.getByRole('button', { name: 'More bio, uniform, draft,' }).isVisible();
@@ -118,16 +123,50 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
             }
             else {
                 console.log(playerArray[x] + ": rookie status NOT exceeded");
+
             }
 
-            const stillIntact = await page.getByText('Rookie Status: Still Intact through').isVisible();
+            // Check for 2025 season data and verify b_pa value
+            const year2025Element = page.locator('th[scope="row"][data-stat="year_id"][csk="2025"]').first();
+            const isYear2025Visible = await year2025Element.isVisible();
 
-            if (stillIntact) {
-                console.log(playerArray[x] + ": rookie status still intact!");
-                rookies.push(playerArray[x]);
+            if (isYear2025Visible) {
+
+                if (hittersOrPitchers == "hitters") {
+                    // Find the b_ab td in the same row as the 2025 year header
+                    // Use locator with xpath to find parent tr, then find td with b_pa
+                    const row = page.locator('th[scope="row"][data-stat="year_id"][csk="2025"]').first().locator('xpath=ancestor::tr');
+                    const bPaElement = row.locator('td[data-stat="b_ab"]').first();
+                    const bPaValueText = await bPaElement.textContent();
+                    const bPaValue = parseInt(bPaValueText.trim(), 10);
+
+                    if (bPaValue >= 130 && !rookieStatusExceeded) {
+                        bRefPossibleMisMatch = true;
+                        console.log(playerArray[x] + " At Bats is " + bPaValue);
+                        console.log("Possible mismatch - rookie status with more than 130 at bats".red);
+                        suspicious.push(playerArray[x]);
+                    } else {
+                        bRefPossibleMisMatch = false;
+                        console.log(playerArray[x] + " At Bats is " + bPaValue);
+                    }
+                }
+                else {
+                    // Fill in for pitchers
+                }
+
+                const stillIntact = await page.getByText('Rookie Status: Still Intact through').isVisible();
+
+                if (stillIntact) {
+                    console.log(playerArray[x] + ": rookie status still intact!");
+                    rookies.push(playerArray[x]);
+
+                    if (bRefPossibleMisMatch) {
+                        console.log(playerArray[x] + ": b_pa value is possible mis-match".red.bold);
+                    }
+                }
+
+                await page.waitForTimeout(3000);
             }
-
-            await page.waitForTimeout(3000);
         }
     }
 
@@ -148,6 +187,13 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
     console.log("COULD NOT DETERMINE");
     for (x = 0; x < couldNotDetermine.length; x++) {
         console.log(couldNotDetermine[x]);
+    }
+    console.log("--------")
+
+    console.log("--------")
+    console.log("SUSPICIOUS");
+    for (x = 0; x < suspicious.length; x++) {
+        console.log(suspicious[x]);
     }
     console.log("--------")
 
