@@ -135,12 +135,19 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
                 if (hittersOrPitchers == "hitters") {
                     // Find the b_ab td in the same row as the 2025 year header
                     // Use locator with xpath to find parent tr, then find td with b_pa
-                    const row = page.locator('th[scope="row"][data-stat="year_id"][csk="2025"]').first().locator('xpath=ancestor::tr');
+                    const row = page.locator('th[scope="row"][data-stat="year_id"][csk="Yrs"]').first().locator('xpath=ancestor::tr');
                     const bPaElement = row.locator('td[data-stat="b_ab"]').first();
+
+                    // Create a red box around the element
+                    await bPaElement.evaluate((el) => {
+                        el.style.border = '3px solid red';
+                        el.style.boxSizing = 'border-box';
+                    });
+
                     const bPaValueText = await bPaElement.textContent();
                     const bPaValue = parseInt(bPaValueText.trim(), 10);
 
-                    if (bPaValue >= 130 && !rookieStatusExceeded) {
+                    if (bPaValue > 130 && !rookieStatusExceeded) {
                         bRefPossibleMisMatch = true;
                         console.log(playerArray[x] + " At Bats is " + bPaValue);
                         console.log("Possible mismatch - rookie status with more than 130 at bats".red);
