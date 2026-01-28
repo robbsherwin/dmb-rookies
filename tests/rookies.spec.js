@@ -13,7 +13,7 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
     const playerArray = await getRookiePlayers();
 
     // Needs to know which
-    const hittersOrPitchers = "hitters";
+    const hittersOrPitchers = "pitchers"; // or "hitters"
 
     const veterans = [""];
     const rookies = [""];
@@ -21,6 +21,7 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
     const suspicious = [""];
     let cantFindPlayer = false;
     const currentYear = String(new Date().getFullYear());
+    let currentLeagueYear = currentYear - 1;
 
 
     for (var x = 0; x < playerArray.length; x++) {
@@ -159,6 +160,31 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
                 }
                 else {
                     // Fill in for pitchers
+                    // Find the b_ab td in the same row as the 2025 year header
+                    // Use locator with xpath to find parent tr, then find td with b_pa
+                    const row = page.locator('th[scope="row"][data-stat="year_id"][csk="Yrs"]').first().locator('xpath=ancestor::tr');
+                    const bInningsPitchedElement = row.locator('td[data-stat="p_ip"]').first();
+
+                    // Create a red box around the element
+                    await bInningsPitchedElement.evaluate((el) => {
+                        el.style.border = '3px solid red';
+                        el.style.boxSizing = 'border-box';
+                    });
+
+                    //await page.waitForTimeout(3000);
+
+                    const bInningsPitchedValueText = await bInningsPitchedElement.textContent();
+                    const bInningsPitchedValue = parseInt(bInningsPitchedValueText.trim(), 10);
+
+                    if (bInningsPitchedValue > 50 && !rookieStatusExceeded) {
+                        bRefPossibleMisMatch = true;
+                        console.log(playerArray[x] + " IP is " + bInningsPitchedValue);
+                        console.log("Possible mismatch - rookie status with more than 50 innings pitched".red);
+                        suspicious.push(playerArray[x]);
+                    } else {
+                        bRefPossibleMisMatch = false;
+                        console.log(playerArray[x] + " IP is " + bInningsPitchedValue);
+                    }
                 }
 
                 const stillIntact = await page.getByText('Rookie Status: Still Intact through').isVisible();
@@ -168,7 +194,7 @@ test('test', { timeout: 10 * 60 * 1000 }, async ({ page }) => {
                     rookies.push(playerArray[x]);
 
                     if (bRefPossibleMisMatch) {
-                        console.log(playerArray[x] + ": b_pa value is possible mis-match".red.bold);
+                        console.log(playerArray[x] + ": b_pa value is possible mis-match".red);
                     }
                 }
 
